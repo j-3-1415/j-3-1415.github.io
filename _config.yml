@@ -17,11 +17,11 @@ minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt"
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Jacob Pichelmann"
+title                    : "Home"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
-name                     : "Jacob Pichelmann"
-description              : "Home"
+name                     : "Home"
+description              : ""
 url                      : https://j-3-1415.github.io
 baseurl                  : # the subpath of your site, e.g. "/blog"
 repository               : j-3-1415/j-3-1415.github.io
