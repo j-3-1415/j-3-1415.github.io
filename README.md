@@ -1,4 +1,3 @@
-# aboomer07.github.io
-My Personal Website
+Personal website featuring projects and my resume. 
 
-Still in the process of updating and filling out!
+Updated frequently but not regularly. 
