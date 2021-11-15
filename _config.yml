@@ -12,6 +12,7 @@
 
 theme                  : "minimal-mistakes-jekyll"
 # remote_theme           : "mmistakes/minimal-mistakes"
+remote_theme             : "remote_theme: http[s]://github.<Enterprise>.com/benbalter/retlab"
 minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
 
 # Site Settings
@@ -103,7 +104,7 @@ analytics:
 author:
   name             : "Jacob Pichelmann"
   avatar           : /assets/Profile.png
-  bio              : "Economic Analyst | Data Scientist and Enthusiast | Striving to tackle society's most pressing issues with advanced analytical tools"
+  bio              : "Economic Analyst, Data Scientist and Enthusiast"
   location         : "Vienna, AT"
   email            : jacob.pichelmann@gmail.com
   links:
