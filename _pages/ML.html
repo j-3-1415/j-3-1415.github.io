@@ -1,0 +1,38 @@
+---
+layout: single
+author_profile: false
+---
+
+<head>
+	<title>ML Dimensionality Reduction | My Website</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="/assets/css/main.css" />
+</head>
+
+<body>
+	<header>
+	<h1>ML Dimensionality Reduction</h1>
+		<p><small>Project Dates: 
+			<em>December 2020 - March 2021</em></small>
+		</p>
+		<a href="/assets/ProjectFiles/ML.pdf" rel="nofollow noopener noreferrer me"><img src="/assets/pdf_icon.jpg" width="30px"><span class="label"></span></a>
+		<a href="https://github.com/aboomer07/ML-Factor-Model-Simulation" rel="nofollow noopener noreferrer me"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label"></span></a>
+	</header>
+	<main>
+		<article>
+			This project was done in collaboration with Jacob Pichelmann during my masters program at the Toulouse School of Economics.
+			<h2>Project Overview</h2>
+			<p>
+				This project was the final project for the Machine Learning class during my masters program. The project involved a replication of the paper, "In-sample inference and forecasting in misspecified factor models" which can be found <a href="https://repositori.upf.edu/bitstream/handle/10230/27209/1530.pdf?sequence=1">here</a>. It focused on in-sample prediction and out-of-sample forecasting in high dimensional models with many exogenous regressors. Four dimension reduction devices are used: Principal Components, Ridge Regression, Landweber Fridman (LF), and Partial Least Squares (PLS). Each involves a regularization or tuning parameter that is selected through generalized cross validation (GCV) or Mallows Cp. Following Carrasco and Rossi we evaluate these estimators in a monte carlo simulation framework with 6 different data generating processes (DGPs). For dimension reduction, we use the singular value decomposition, as well as comparing its computational efficiency in this monte carlo application to the eigenvalue decomposition. These models are then used in an empirical application on a set of monthly macroeconomic and financial indicators.
+			</p>
+			<h2>Data Sources</h2>
+			<p>
+				The data for the Monte Carlo simulation is based on 6 simulated data generating processes. The data for the empirical application comes from the Federal Reserve (FRED) monthly database.
+			</p>
+			<h2>Tools Used</h2>
+			<p>
+				The paper was built using Latex. The coding was done in python using the Sklearn, Pandas, Seaborn, Statsmodels, and Random packages.
+			</p>
+		</article>
+	</main>
+</body>

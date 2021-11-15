@@ -1,0 +1,38 @@
+---
+layout: single
+author_profile: false
+---
+
+<head>
+	<title>EU Electricty Market Time Series | My Website</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="/assets/css/main.css" />
+</head>
+
+<body>
+	<header>
+	<h1>EU Electricty Market Time Series</h1>
+		<p><small>Project Dates: 
+			<em>April 2020 - July 2020</em></small>
+		</p>
+		<a href="/assets/ProjectFiles/M1_Thesis.pdf" rel="nofollow noopener noreferrer me"><img src="/assets/pdf_icon.jpg" width="30px"><span class="label"></span></a>
+		<a href="https://github.com/aboomer07/EUEnergyTimeSeries" rel="nofollow noopener noreferrer me"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label"></span></a>
+	</header>
+	<main>
+		<article>
+			This project was done as my first year Masters thesis at the Toulouse School of Economics. It is an extension of a previous project that can be found <a href="/_pages/Applied">here</a>.
+			<h2>Project Overview</h2>
+			<p>
+				The original project used a panel approach to analyze the effect of renewable electricity penetration on balancing market outcomes in 20 EU member states. Given the nature of high frequency electricity data, persistent serial autocorrelation was found in the residuals. This thesis project investigated using a time series treatment of the model as opposed to the original panel model. To this end, a bayesian structural time series (bsts) model with markov chain monte carlo (MCMC) based estimation was used. The paper also looks at the historical progression of time series modeling, and how different time series behavior is captured in different models. Data was additionally analyzed in the frequency space using the Fourier transform to gain insight into cyclical patterns.
+			</p>
+			<h2>Data Sources</h2>
+			<p>
+				The data is sourced from the European Network of Transmission System Operators for Electricity (ENTSO-e) transparency database. The data is downloaded with a HTTP based API, which returns XML files containing the data. The database can be found <a href="https://transparency.entsoe.eu">here</a>.
+			</p>
+			<h2>Tools Used</h2>
+			<p>
+				The paper was built using Latex. The coding was done in R using the bsts, tidyverse, XML, stringr, plm, stargazer, sandwich, stats, forecast, and tseries packages.
+			</p>
+		</article>
+	</main>
+</body>

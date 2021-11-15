@@ -1,0 +1,6 @@
+# main links
+main:
+  - title: "Projects"
+    url: /_pages/Projects/
+  - title: "Resume"
+    url: /assets/Resume.pdf
