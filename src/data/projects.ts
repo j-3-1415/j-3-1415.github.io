@@ -13,7 +13,7 @@ export interface Project {
   sections: { heading: string; paragraphs?: string[]; bullets?: string[] }[];
   people?: string;
   links: { label: string; href: string; note?: string }[];
-  quote?: string;
+  quote?: { text: string; source: string; href: string };
   schemaType: 'ScholarlyArticle' | 'SoftwareApplication' | 'CreativeWork';
 }
 
@@ -70,7 +70,11 @@ export const projects: Project[] = [
         ],
       },
     ],
-    quote: 'While many fear AI will replace clinicians, our study shows it actually empowers them.',
+    quote: {
+      text: 'While many fear AI will replace clinicians, our study shows it actually empowers them.',
+      source: 'Jacob Pichelmann, quoted in Ophthalmology Management’s ARVO 2026 coverage, May 2026',
+      href: 'https://www.ophthalmologymanagement.com/issues/2026/arvo/ai-assistance-in-identifying-retinal-disease-biomarkers-in-oct-scans',
+    },
     people:
       'Co-authors include Reena Chopra (Topcon Healthcare), Wolf-Dieter Vogl, Charles C. Wykoff, Ursula Schmidt-Erfurth and Ariadne Whitby.',
     links: [
