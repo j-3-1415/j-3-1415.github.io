@@ -1,0 +1,29 @@
+---
+import { site } from '../data/site';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer" id="contact">
+  <div class="wrap">
+    <div class="contact">
+      <p class="eyebrow">Contact</p>
+      <div class="contact__body">
+        <h2 class="contact__title">Get in touch.</h2>
+        <p class="contact__text">
+          The quickest way to reach me is on LinkedIn. I’m always happy to talk about clinical AI, evaluation and
+          building teams that ship in regulated settings.
+        </p>
+        <ul class="text-links" role="list">
+          {site.links.map((l) => (
+            <li>
+              <a href={l.href} rel="me noopener" target="_blank">
+                {l.label} <span aria-hidden="true">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+    <p class="site-footer__meta mono">© {year} {site.name} | {site.location}</p>
+  </div>
+</footer>

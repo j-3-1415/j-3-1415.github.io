@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .m{stroke:#17191c}.b{stroke:#1d6b73}.n{fill:#1d6b73}.h{fill:#17191c}
+    @media (prefers-color-scheme:dark){.m{stroke:#ecebe7}.b{stroke:#4fb3bc}.n{fill:#4fb3bc}.h{fill:#ecebe7}}
+  </style>
+  <g fill="none" stroke-width="3" stroke-linecap="round">
+    <path class="m" d="M10 4v24"/>
+    <path class="b" d="M10 25c0-6 12-6 12-12V9"/>
+  </g>
+  <circle class="n" cx="22" cy="8" r="4"/>
+  <circle class="h" cx="10" cy="15" r="3.5"/>
+</svg>

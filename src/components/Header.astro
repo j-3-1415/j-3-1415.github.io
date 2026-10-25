@@ -1,0 +1,16 @@
+---
+import { site } from '../data/site';
+const isHome = Astro.url.pathname === '/';
+const href = (hash: string) => (isHome ? hash : `/${hash}`);
+---
+
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="site-header__name" href="/">{site.name}</a>
+    <nav aria-label="Main">
+      <a href={href('#path')}>Path</a>
+      <a href={href('#work')}>Work</a>
+      <a href={href('#contact')}>Contact</a>
+    </nav>
+  </div>
+</header>

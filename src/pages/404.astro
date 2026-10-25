@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+---
+
+<Base title={`Page not found | ${site.name}`} description={site.summary} path="/404">
+  <section class="nf wrap">
+    <p class="eyebrow">404</p>
+    <h1 class="nf__title">This page doesn’t exist anymore.</h1>
+    <p class="nf__text">
+      The site was rebuilt, so older links may no longer work. Everything is on the homepage now.
+    </p>
+    <a class="btn" href="/">Go to the homepage <span aria-hidden="true">→</span></a>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    display: grid;
+    gap: 18px;
+    justify-items: start;
+    padding-block: 120px 40px;
+    max-width: 720px;
+  }
+
+  .nf__title {
+    font-size: clamp(2rem, 4.4vw, 3rem);
+    letter-spacing: -0.045em;
+  }
+
+  .nf__text {
+    color: var(--ink-2);
+    font-size: 1.0625rem;
+  }
+</style>

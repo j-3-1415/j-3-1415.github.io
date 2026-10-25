@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Path from '../components/Path.astro';
+import Work from '../components/Work.astro';
+import { site } from '../data/site';
+import { personSchema } from '../lib/schema';
+---
+
+<Base
+  title={`${site.name}: ${site.role} at ${site.org}`}
+  description={site.summary}
+  jsonLd={personSchema()}
+  ogType="profile"
+>
+  <Hero />
+  <Path />
+  <Work />
+</Base>

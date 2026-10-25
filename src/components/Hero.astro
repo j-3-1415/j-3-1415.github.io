@@ -1,0 +1,136 @@
+---
+import { site } from '../data/site';
+
+---
+
+<section class="hero wrap" aria-labelledby="hero-title">
+  <div class="hero__text">
+    <p class="eyebrow">Medical AI | Validated Deep Learning | Vienna</p>
+    <h1 id="hero-title" class="hero__name">{site.name}</h1>
+    <div class="hero__lede">
+      <p class="hero__role">{site.role} at {site.org}</p>
+      <p class="hero__claim">{site.headline}</p>
+    </div>
+    <div class="hero__bio">
+      {site.bio.map((p) => <p>{p}</p>)}
+    </div>
+    <ul class="text-links hero__links" role="list">
+      {site.links.map((l) => (
+        <li>
+          <a href={l.href} rel="me noopener" target="_blank">
+            {l.label} <span aria-hidden="true">↗</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <figure class="hero__photo">
+    <picture>
+      <source
+        type="image/webp"
+        srcset="/images/jacob-pichelmann-480.webp 480w, /images/jacob-pichelmann.webp 760w"
+        sizes="(max-width: 860px) 160px, 340px"
+      />
+      <img
+        src="/images/jacob-pichelmann-480.jpg"
+        srcset="/images/jacob-pichelmann-480.jpg 480w, /images/jacob-pichelmann.jpg 760w"
+        sizes="(max-width: 860px) 160px, 340px"
+        width="760"
+        height="950"
+        alt="Portrait of Jacob Pichelmann"
+        fetchpriority="high"
+      />
+    </picture>
+  </figure>
+
+</section>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+    gap: 40px 72px;
+    align-items: end;
+    padding-top: 80px;
+  }
+
+  .hero__text {
+    display: grid;
+    gap: 20px;
+    align-content: end;
+  }
+
+  .hero__name {
+    font-size: clamp(2.75rem, 6.4vw, 5rem);
+    font-weight: 700;
+    letter-spacing: -0.055em;
+    line-height: 0.98;
+  }
+
+  .hero__lede {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .hero__role {
+    font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+    font-weight: 550;
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+
+  .hero__claim {
+    font-size: clamp(1.15rem, 1.9vw, 1.375rem);
+    font-weight: 400;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    color: color-mix(in oklab, var(--ink-2) 55%, var(--ink-3));
+  }
+
+  .hero__bio {
+    display: grid;
+    gap: 12px;
+    max-width: 62ch;
+    color: var(--ink-2);
+    font-size: 1.0625rem;
+  }
+
+  .hero__links {
+    margin-top: 4px;
+  }
+
+  .hero__photo {
+    margin: 0;
+  }
+
+  .hero__photo img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: 18px;
+    background: var(--bg-sunk);
+    box-shadow: var(--shadow);
+  }
+
+  @media (max-width: 860px) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 28px;
+      padding-top: 40px;
+    }
+
+    .hero__photo {
+      order: -1;
+      width: 160px;
+    }
+
+    .hero__photo img {
+      border-radius: 14px;
+    }
+  }
+</style>

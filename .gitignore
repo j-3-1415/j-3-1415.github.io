@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+.env
+
+# Local-only: working notes and editor/session config
+content-draft.md
+.claude/

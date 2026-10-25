@@ -1,0 +1,1203 @@
+---
+import { rows, lanes, columns, script, segmentPath, GRAPH_W, type Column } from '../data/path';
+import { entries, fmtRange, categories } from '../data/timeline';
+import { projectBySlug } from '../data/projects';
+
+const defaultEntry = 'retinsight-head';
+const last = script[script.length - 1];
+const pct = (x: number) => `${((x / GRAPH_W) * 100).toFixed(3)}%`;
+const catOf = (id: string) => entries.find((e) => e.id === id)!.category;
+
+// Lay rows out as a grid: one column per kind of entry, so an entry that ran across
+// several phases (the MSc) spans those rows and its overlap with work is visible.
+const colIndex: Record<Column, number> = { work: 3, edu: 4, side: 5 };
+const covered = new Set<string>();
+const grid = rows.map((row, i) => {
+  const cells = columns.flatMap((col, ci) => {
+    if (covered.has(`${i}-${col.id}`)) return [];
+    const items = row.items.filter((it) => it.col === col.id);
+    const span = Math.max(1, ...items.map((it) => it.span ?? 1));
+    const colSpan = Math.max(1, ...items.map((it) => it.colSpan ?? 1));
+    for (let k = 0; k < span; k++)
+      for (let c = 0; c < colSpan; c++) if (k || c) covered.add(`${i + k}-${columns[ci + c].id}`);
+    return [{ col, items, span, colSpan }];
+  });
+  return { row, i, cells };
+});
+
+// Cards in the same order as the path, newest first.
+const cards = rows.flatMap((r) => r.items.map((i) => entries.find((e) => e.id === i.entry)!));
+---
+
+<section class="section wrap" id="path" aria-labelledby="path-title">
+  <div class="section__head">
+    <p class="eyebrow">Experience & education</p>
+    <h2 id="path-title" class="section__title">A path that converges.</h2>
+    <p class="section__intro">
+      Economics, research, law and building things on the side, all merging into what I do now. Select any entry
+      for the details.
+    </p>
+  </div>
+
+  <div class="term" aria-hidden="true">
+    <div class="term__bar">
+      <span class="term__dots"><i></i><i></i><i></i></span>
+      <span class="term__title">career.git — zsh</span>
+      <button type="button" class="term__step" data-replay tabindex="-1" title="Replay">
+        step <b data-step>{String(script.length).padStart(2, '0')}</b>/{String(script.length).padStart(2, '0')}
+        <span class="term__replay">↻</span>
+      </button>
+    </div>
+    <p class="term__line">
+      <span class="term__prompt">jacob@career %</span>
+      <span class="term__cmd" data-cmd>{last.cmd}</span><span class="term__caret"></span>
+    </p>
+  </div>
+
+  <div class="path" data-default={defaultEntry}>
+    <div class="path__main">
+      <div class="legend" role="group" aria-label="Filter the path">
+        {columns.map((c) => (
+          <button type="button" class="legend__item" data-filter={c.cat} aria-pressed="true">
+            <span class="dot" data-cat={c.cat} aria-hidden="true"></span>
+            {c.label}
+          </button>
+        ))}
+        <span class="legend__note mono"><span class="legend__dash" aria-hidden="true"></span> in progress</span>
+      </div>
+
+      <ol class="pg" role="list">
+        {grid.map(({ row, i, cells }) => (
+          <li class="ph" style={`--r:${i + 1}; --i:${rows.length - 1 - i}`}>
+            <p class="ph__when mono">{row.when}</p>
+            <div class="ph__graph" aria-hidden="true">
+              <svg viewBox={`0 0 ${GRAPH_W} 100`} preserveAspectRatio="none">
+                {row.segments.map((s) => (
+                  <path
+                    d={segmentPath(s)}
+                    class:list={['seg', { 'seg--dashed': s.dashed }]}
+                    data-cat={s.cat ?? lanes[s.from[0]].cat}
+                    vector-effect="non-scaling-stroke"
+                  />
+                ))}
+              </svg>
+              {row.items.map((it) => (
+                <span
+                  class:list={['node', { 'node--head': it.head, 'node--edge': it.nodeY === 100 }]}
+                  style={`left:${pct(lanes[it.lane].x)}; top:${it.nodeY ?? 50}%`}
+                  data-cat={catOf(it.entry)}
+                  data-entry={it.entry}
+                ></span>
+              ))}
+            </div>
+            {cells.map((cell) => (
+              <div
+                class:list={['ph__cell', { 'is-empty': !cell.items.length, 'is-span': cell.span > 1 }]}
+                data-col={cell.col.id}
+                style={`--c:${colIndex[cell.col.id]}; --span:${cell.span}; --cs:${cell.colSpan}`}
+              >
+                {cell.items.map((it) => (
+                  <button
+                    type="button"
+                    class:list={['item', { 'item--progress': it.inProgress }]}
+                    data-join={it.join}
+                    data-open={it.entry}
+                    data-entry={it.entry}
+                    data-cat={catOf(it.entry)}
+                    aria-controls={`card-${it.entry}`}
+                  >
+                    <span class="item__title">
+                      {it.title}
+                      {it.head && <span class="pill mono">HEAD</span>}
+                    </span>
+                    <span class="item__meta">{it.meta}</span>
+                    {(it.when || it.badge) && (
+                      <span class="item__foot">
+                        {it.when && <span class="mono">{it.when}</span>}
+                        {it.badge && <span class="badge">{it.badge}</span>}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <div class="scrim" data-close aria-hidden="true"></div>
+    <aside class="panel" aria-label="Details">
+      {cards.map((e) => (
+        <article class="card" id={`card-${e.id}`} data-entry={e.id} data-cat={e.category}>
+          <button type="button" class="card__close" data-close aria-label="Close details">×</button>
+          <p class="card__kicker mono">
+            <span class="dot" data-cat={e.category} aria-hidden="true" />
+            {categories[e.category].label} | {fmtRange(e.start, e.end, e.status)}
+          </p>
+          <h3 class="card__title">{e.title}</h3>
+          <p class="card__org">
+            <strong>{e.org}</strong>
+            {e.location && <span> | {e.location}</span>}
+          </p>
+          {e.orgNote && <p class="card__note">{e.orgNote}</p>}
+
+          <div class="card__story">
+            {e.story.map((para) => <p>{para}</p>)}
+          </div>
+
+          {e.tags && (
+            <ul class="card__tags" role="list">
+              {e.tags.map((t) => <li>{t}</li>)}
+            </ul>
+          )}
+
+
+          {e.roles && (
+            <div class="card__block">
+              <h4 class="card__h">Roles</h4>
+              <ol class="card__roles" role="list">
+                {e.roles.map((ro) => (
+                  <li>
+                    <span>{ro.title}</span>
+                    <span class="mono">{fmtRange(ro.from, ro.to)}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {e.projects && (
+            <div class="card__block">
+              <h4 class="card__h">Selected work</h4>
+              <ul class="card__projects" role="list">
+                {e.projects.map((slug) => {
+                  const p = projectBySlug(slug)!;
+                  return (
+                    <li>
+                      <a href={`/projects/${p.slug}/`}>
+                        <span>{p.title}</span>
+                        <span aria-hidden="true">→</span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          {e.publications && (
+            <div class="card__block">
+              <h4 class="card__h">ARVO abstracts</h4>
+              <ul class="card__pubs" role="list">
+                {e.publications.map((pub) => (
+                  <li>
+                    <a href={pub.href} target="_blank" rel="noopener">{pub.title}</a>
+                    <span class="mono">
+                      {pub.venue}
+                      {pub.firstAuthor && <span class="card__first"> | first author</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {e.links && (
+            <ul class="card__links" role="list">
+              {e.links.map((l) => (
+                <li>
+                  <a href={l.href} target="_blank" rel="noopener">
+                    {l.label} <span aria-hidden="true">↗</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
+      ))}
+    </aside>
+  </div>
+</section>
+
+<script>
+  import { script } from '../data/path';
+
+  const root = document.querySelector<HTMLElement>('.path');
+  if (root) {
+    const panel = root.querySelector<HTMLElement>('.panel')!;
+    const cards = [...root.querySelectorAll<HTMLElement>('.card')];
+    const ids = new Set(cards.map((c) => c.dataset.entry!));
+    const sheet = window.matchMedia('(max-width: 959px)');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const hidden = new Set<string>();
+    let lastTrigger: HTMLElement | null = null;
+
+    const byEntry = (id: string) => root.querySelectorAll<HTMLElement>(`[data-entry="${id}"]:not(.card)`);
+    const mark = (cls: string, id?: string) => {
+      root.querySelectorAll(`.${cls}`).forEach((el) => el.classList.remove(cls));
+      if (id) byEntry(id).forEach((el) => el.classList.add(cls));
+    };
+
+    const open = (id: string, opts: { push?: boolean; fromUser?: boolean } = {}) => {
+      if (!ids.has(id)) return;
+      mark('is-active', id);
+      cards.forEach((c) => c.classList.toggle('is-open', c.dataset.entry === id));
+      root.querySelectorAll<HTMLElement>('.item').forEach((b) => b.setAttribute('aria-expanded', String(b.dataset.open === id)));
+      panel.scrollTop = 0;
+      if (opts.push) history.replaceState(null, '', `#${id}`);
+      if (opts.fromUser && sheet.matches) {
+        root.classList.add('is-sheet-open');
+        document.documentElement.classList.add('no-scroll');
+        panel.querySelector<HTMLElement>(`#card-${id} .card__close`)?.focus({ preventScroll: true });
+      }
+    };
+
+    const closeSheet = () => {
+      root.classList.remove('is-sheet-open');
+      document.documentElement.classList.remove('no-scroll');
+      lastTrigger?.focus({ preventScroll: true });
+    };
+
+    root.addEventListener('click', (ev) => {
+      const t = ev.target as HTMLElement;
+      const item = t.closest<HTMLElement>('[data-open]');
+      if (item) {
+        lastTrigger = item;
+        stopTerminal();
+        open(item.dataset.open!, { push: true, fromUser: true });
+        return;
+      }
+      if (t.closest('[data-close]')) closeSheet();
+      const chip = t.closest<HTMLElement>('[data-filter]');
+      if (chip) {
+        const c = chip.dataset.filter!;
+        const on = chip.getAttribute('aria-pressed') === 'true';
+        chip.setAttribute('aria-pressed', String(!on));
+        on ? hidden.add(c) : hidden.delete(c);
+        root.dataset.hide = [...hidden].join(' ');
+      }
+    });
+
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && root.classList.contains('is-sheet-open')) closeSheet();
+    });
+
+    // Hovering an entry highlights its node.
+    root.addEventListener('pointerover', (ev) => {
+      const id = (ev.target as HTMLElement).closest<HTMLElement>('.item')?.dataset.entry;
+      if (id !== root.dataset.hl) {
+        mark('is-hl', id);
+        id ? (root.dataset.hl = id) : delete root.dataset.hl;
+      }
+    });
+
+    // Deep links: /#oecd opens that card.
+    const fromHash = () => {
+      const id = decodeURIComponent(location.hash.slice(1));
+      if (!ids.has(id)) return false;
+      open(id);
+      requestAnimationFrame(() =>
+        root.querySelector<HTMLElement>(`.item[data-entry="${id}"]`)?.scrollIntoView({ block: 'center' }),
+      );
+      return true;
+    };
+    if (!fromHash()) open(root.dataset.default!);
+    window.addEventListener('hashchange', fromHash);
+    sheet.addEventListener('change', () => !sheet.matches && closeSheet());
+
+    // Terminal: replays the path as git commands, lighting up each entry in turn.
+    const cmdEl = document.querySelector<HTMLElement>('[data-cmd]')!;
+    const stepEl = document.querySelector<HTMLElement>('[data-step]')!;
+    document.querySelector('[data-replay]')?.addEventListener('click', () => playTerminal());
+    let run = 0;
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+    function stopTerminal() {
+      run++;
+      mark('is-lit');
+    }
+
+    async function playTerminal() {
+      const me = ++run;
+      for (let s = 0; s < script.length; s++) {
+        const { cmd, entry } = script[s];
+        stepEl.textContent = String(s + 1).padStart(2, '0');
+        cmdEl.textContent = '';
+        for (let c = 1; c <= cmd.length; c++) {
+          if (me !== run) return;
+          cmdEl.textContent = cmd.slice(0, c);
+          await wait(cmd[c - 1] === ' ' ? 18 : 26);
+        }
+        mark('is-lit', entry);
+        await wait(s === script.length - 1 ? 0 : 950);
+        if (me !== run) return;
+      }
+    }
+
+    // Draw the graph bottom-up once it is in view, then start the terminal.
+    const graph = root.querySelector<HTMLElement>('.pg')!;
+    if (reduce || !('IntersectionObserver' in window)) {
+      graph.classList.add('is-drawn');
+    } else {
+      graph.classList.add('will-draw');
+      const io = new IntersectionObserver(
+        (items) => {
+          if (!items.some((i) => i.isIntersecting)) return;
+          io.disconnect();
+          graph.classList.add('is-drawn');
+          playTerminal();
+        },
+        { rootMargin: '0px 0px -20% 0px' },
+      );
+      io.observe(graph);
+    }
+  }
+</script>
+
+<style is:global>
+  html.no-scroll {
+    overflow: hidden;
+  }
+
+  .path {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 330px);
+    gap: 36px;
+    align-items: start;
+  }
+
+  .scrim {
+    display: none;
+  }
+
+  /* ---------- Terminal ---------- */
+
+  .term {
+    margin-bottom: 36px;
+    background: #141517;
+    color: #e8e6e1;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 16px 40px -20px rgb(0 0 0 / 0.45);
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+  }
+
+  .term__bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.07);
+    color: rgb(255 255 255 / 0.45);
+    font-size: 0.72rem;
+  }
+
+  .term__dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .term__dots i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #e5534b;
+  }
+
+  .term__dots i:nth-child(2) {
+    background: #e0a53a;
+  }
+
+  .term__dots i:nth-child(3) {
+    background: #4a8be0;
+  }
+
+  .term__step {
+    all: unset;
+    justify-self: end;
+    cursor: pointer;
+  }
+
+  .term__step b {
+    color: rgb(255 255 255 / 0.85);
+    font-weight: 500;
+  }
+
+  .term__replay {
+    margin-left: 6px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .term:hover .term__replay {
+    opacity: 1;
+  }
+
+  .term__line {
+    padding: 22px 18px 24px;
+    min-height: 1.6em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .term__prompt {
+    color: #6fd3a6;
+    margin-right: 8px;
+  }
+
+  .term__caret {
+    display: inline-block;
+    width: 8px;
+    height: 1.15em;
+    margin-left: 1px;
+    vertical-align: text-bottom;
+    background: #e5534b;
+    animation: caret 1s steps(1) infinite;
+  }
+
+  @keyframes caret {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .term__caret {
+      animation: none;
+    }
+  }
+
+  /* ---------- Legend / filters ---------- */
+
+  .legend__item {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    padding: 4px 0;
+  }
+
+  .legend__item:focus-visible {
+    outline: 2px solid var(--career);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  .legend__item[aria-pressed='false'] {
+    color: var(--ink-3);
+    text-decoration: line-through;
+  }
+
+  .legend__item[aria-pressed='false'] .dot {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--ink-3);
+  }
+
+  .legend__note {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-3);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .legend__dash {
+    width: 18px;
+    border-top: 2px dashed var(--education);
+  }
+
+  .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--career);
+    flex: none;
+  }
+
+  .dot[data-cat='education'] {
+    background: var(--education);
+  }
+
+  .dot[data-cat='builder'] {
+    background: var(--builder);
+  }
+
+  /* ---------- Path grid ---------- */
+
+  .pg {
+    display: grid;
+    grid-template-columns: 104px var(--graph-w, 100px) minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .ph {
+    display: contents;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 20px;
+    margin-bottom: 14px;
+  }
+
+  .legend__note {
+    margin-left: auto;
+  }
+
+  .ph__when {
+    grid-row: var(--r);
+    grid-column: 1;
+    align-self: center;
+    color: var(--ink-3);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .ph__graph {
+    grid-row: var(--r);
+    grid-column: 2;
+    position: relative;
+    min-height: 88px;
+  }
+
+  .ph__graph svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .ph__cell {
+    grid-row: var(--r) / span var(--span);
+    grid-column: var(--c) / span var(--cs, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border-top: 1px solid var(--rule);
+    isolation: isolate;
+  }
+
+  .ph__cell:not([data-col='work']) {
+    border-left: 1px solid var(--rule);
+  }
+
+  .ph:last-child .ph__cell {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* Every entry fills its cell and carries an accent bar in its colour. Entries that
+     belong together (the RetInSight roles) join their bars across row borders; an
+     entry that spans rows (the MSc) gets one long bar. Dashed = still in progress. */
+  .ph__cell .item {
+    flex: 1;
+  }
+
+  .item::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 10px;
+    bottom: 10px;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--career);
+    opacity: 0.45;
+    transition: opacity 0.15s;
+  }
+
+  .item[data-cat='education']::after {
+    background: var(--education);
+  }
+
+  .item[data-cat='builder']::after {
+    background: var(--builder);
+  }
+
+  .item.item--progress::after {
+    background: repeating-linear-gradient(to bottom, var(--education) 0 4px, transparent 4px 8px);
+    opacity: 0.7;
+  }
+
+  .item[data-join~='up']::after {
+    top: -7px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  .item[data-join~='down']::after {
+    bottom: -6px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .item:hover::after,
+  .item.is-lit::after,
+  .item.is-active::after,
+  .path[data-hl^='retinsight'] .item[data-join]::after {
+    opacity: 1;
+  }
+
+  /* Graph strokes and nodes */
+  .seg {
+    fill: none;
+    stroke: var(--career);
+    stroke-width: 2;
+    stroke-linecap: round;
+    transition: opacity 0.2s;
+  }
+
+  .seg[data-cat='education'] {
+    stroke: var(--education);
+  }
+
+  .seg[data-cat='builder'] {
+    stroke: var(--builder);
+  }
+
+  .seg--dashed {
+    stroke-dasharray: 4 5;
+    stroke-linecap: butt;
+    opacity: 0.75;
+  }
+
+  .node {
+    --c: var(--career);
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    width: 15px;
+    height: 15px;
+    margin: -7.5px 0 0 -7.5px;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: inset 0 0 0 2px var(--c);
+    transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
+  }
+
+  .node::after {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: var(--c);
+  }
+
+  .node[data-cat='education'] {
+    --c: var(--education);
+  }
+
+  .node[data-cat='builder'] {
+    --c: var(--builder);
+  }
+
+  .node--head {
+    background: var(--c);
+  }
+
+  .node--head::after {
+    inset: 4.5px;
+    background: var(--bg);
+  }
+
+  .node--head::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1.5px solid var(--c);
+    opacity: 0;
+    animation: halo 2.4s ease-out infinite;
+  }
+
+  @keyframes halo {
+    0% {
+      transform: scale(0.6);
+      opacity: 0.55;
+    }
+    100% {
+      transform: scale(1.4);
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .node--head::before {
+      animation: none;
+    }
+  }
+
+  .node.is-hl,
+  .node.is-lit,
+  .node.is-active {
+    transform: scale(1.3);
+  }
+
+  .node.is-lit {
+    box-shadow: inset 0 0 0 2px var(--c), 0 0 0 5px color-mix(in oklab, var(--c) 22%, transparent);
+  }
+
+  /* Draw-in, bottom row first: each row's lines are revealed upwards.
+     Only hidden once JS has opted in, so crawlers and no-JS readers see everything. */
+  .pg.will-draw .ph__graph svg {
+    clip-path: inset(100% -20px 0 -20px);
+  }
+
+  .pg.will-draw .node {
+    opacity: 0;
+  }
+
+  .pg.will-draw.is-drawn .ph__graph svg {
+    clip-path: inset(0 -20px 0 -20px);
+    transition: clip-path 0.42s ease-in-out calc(var(--i) * 0.22s);
+  }
+
+  .pg.will-draw.is-drawn .node {
+    opacity: 1;
+    transition: opacity 0.3s calc(var(--i) * 0.22s + 0.25s), transform 0.2s, box-shadow 0.2s;
+  }
+
+  /* Items */
+  .item {
+    all: unset;
+    box-sizing: border-box;
+    position: relative;
+    display: grid;
+    align-content: center;
+    gap: 2px;
+    width: 100%;
+    padding: 10px 12px 10px 16px;
+    cursor: pointer;
+  }
+
+  .item::before {
+    content: '';
+    position: absolute;
+    inset: 0 4px;
+    border-radius: 10px;
+    background: transparent;
+    transition: background 0.15s;
+    z-index: -1;
+  }
+
+  .item:hover::before,
+  .item.is-lit::before {
+    background: var(--bg-sunk);
+  }
+
+  .item.is-active::before {
+    background: var(--bg-elev);
+    box-shadow: inset 0 0 0 1px var(--rule);
+  }
+
+  .item:focus-visible {
+    outline: none;
+  }
+
+  .item:focus-visible::before {
+    box-shadow: 0 0 0 2px var(--career);
+  }
+
+  .item__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-weight: 600;
+    font-size: 0.975rem;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  .item__meta {
+    color: var(--ink-2);
+    font-size: 0.875rem;
+    line-height: 1.35;
+  }
+
+  .item__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    margin-top: 4px;
+    color: var(--ink-3);
+  }
+
+  .item__foot .mono {
+    font-size: 0.72rem;
+  }
+
+  .badge {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--career-soft);
+    color: var(--career);
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.6;
+  }
+
+  .item[data-cat='education'] .badge {
+    background: var(--education-soft);
+    color: var(--education);
+  }
+
+  .item[data-cat='builder'] .badge {
+    background: var(--builder-soft);
+    color: var(--builder);
+  }
+
+  .pill {
+    padding: 0 6px;
+    border-radius: 4px;
+    background: var(--career);
+    color: var(--bg);
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1.7;
+    letter-spacing: 0.05em;
+  }
+
+  /* Filters dim a category everywhere in the graph */
+  .path[data-hide~='career'] :is(.seg, .node, .item)[data-cat='career'],
+  .path[data-hide~='education'] :is(.seg, .node, .item)[data-cat='education'],
+  .path[data-hide~='builder'] :is(.seg, .node, .item)[data-cat='builder'] {
+    opacity: 0.15;
+  }
+
+  /* ---------- Side card ---------- */
+
+  .panel {
+    position: sticky;
+    top: 84px;
+    max-height: calc(100vh - 104px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .card {
+    position: relative;
+    display: grid;
+    gap: 12px;
+    padding: 24px 24px 28px;
+  }
+
+  html.js .card:not(.is-open) {
+    display: none;
+  }
+
+  html:not(.js) .card + .card {
+    border-top: 1px solid var(--rule);
+  }
+
+  html:not(.js) .panel {
+    position: static;
+    max-height: none;
+  }
+
+  .card__close {
+    display: none;
+  }
+
+  .card__kicker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-3);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .card__title {
+    font-size: 1.5rem;
+  }
+
+  .card__org {
+    color: var(--ink-2);
+  }
+
+  .card__org strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .card__note {
+    color: var(--ink-3);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .card__tags {
+    margin-top: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .card__tags li {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--career-soft);
+    color: var(--career);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .card[data-cat='education'] .card__tags li {
+    background: var(--education-soft);
+    color: var(--education);
+  }
+
+  .card[data-cat='builder'] .card__tags li {
+    background: var(--builder-soft);
+    color: var(--builder);
+  }
+
+  .card__story {
+    display: grid;
+    gap: 10px;
+    margin-top: 2px;
+    color: var(--ink-2);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .card__block {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .card__h {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .card__roles li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+    font-size: 0.9rem;
+  }
+
+  .card__roles .mono {
+    color: var(--ink-3);
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .card__projects a {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px;
+    margin-inline: -12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.925rem;
+    line-height: 1.35;
+  }
+
+  .card__projects a:hover {
+    background: var(--bg-sunk);
+  }
+
+  .card__pubs {
+    display: grid;
+    gap: 12px;
+  }
+
+  .card__pubs li {
+    display: grid;
+    gap: 2px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .card__pubs .mono {
+    color: var(--ink-3);
+    font-size: 0.7rem;
+  }
+
+  .card__first {
+    color: var(--career);
+  }
+
+  .card__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 8px;
+    font-size: 0.9rem;
+  }
+
+  .card__links a {
+    color: var(--ink-2);
+    text-decoration: none;
+  }
+
+  .card__links a:hover {
+    color: var(--ink);
+  }
+
+  /* ---------- Small screens ---------- */
+
+  @media (max-width: 959px) {
+    .path {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    html.js .panel {
+      position: fixed;
+      z-index: 50;
+      inset: auto 0 0 0;
+      max-height: min(82vh, 720px);
+      border-radius: 18px 18px 0 0;
+      border-bottom: 0;
+      transform: translateY(105%);
+      visibility: hidden;
+      transition: transform 0.32s cubic-bezier(0.3, 0.8, 0.2, 1), visibility 0s 0.32s;
+    }
+
+    html.js .path.is-sheet-open .panel {
+      transform: none;
+      visibility: visible;
+      transition: transform 0.32s cubic-bezier(0.3, 0.8, 0.2, 1);
+    }
+
+    html.js .scrim {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 49;
+      background: rgb(0 0 0 / 0.32);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    html.js .path.is-sheet-open .scrim {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    html.js .card__close {
+      display: grid;
+      place-items: center;
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--rule);
+      background: var(--bg-elev);
+      color: var(--ink-2);
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .card__title {
+      padding-right: 44px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .pg {
+      display: block;
+    }
+
+    .legend__note {
+      margin-left: 0;
+    }
+
+    .ph {
+      --graph-w: 88px;
+      display: block;
+      position: relative;
+      padding: 0 0 8px var(--graph-w);
+      border-top: 1px solid var(--rule);
+    }
+
+    .ph:last-child {
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .ph__graph {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--graph-w);
+      min-height: 0;
+    }
+
+    .ph__when {
+      padding: 14px 0 2px 12px;
+    }
+
+    .pg .ph__cell,
+    .pg .ph:last-child .ph__cell {
+      border: 0;
+      padding: 0;
+    }
+
+    .pg .node--edge {
+      top: 50% !important;
+    }
+
+    .ph__cell.is-empty {
+      display: none;
+    }
+
+    .pg .item[data-join]::after {
+      top: 10px;
+      bottom: 10px;
+      border-radius: 3px;
+    }
+
+    .item {
+      padding: 8px 12px;
+    }
+
+    .term__title {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.js .panel {
+      transition: none;
+    }
+  }
+</style>
